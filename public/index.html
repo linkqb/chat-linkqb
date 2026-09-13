@@ -225,6 +225,63 @@
       font-weight: 500;
     }
 
+    .history-search {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 0 9px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px;
+      background: #242424;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    .history-search:focus-within {
+      border-color: #555;
+      background: #292929;
+    }
+
+    .history-search-icon {
+      flex: 0 0 auto;
+      color: #888;
+      font-size: 13px;
+    }
+
+    #history-search {
+      min-width: 0;
+      flex: 1;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #ddd;
+      font-size: 12px;
+    }
+
+    #history-search::placeholder { color: #777; }
+    #history-search::-webkit-search-cancel-button { display: none; }
+
+    #history-search-clear {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: transparent;
+      color: #999;
+      cursor: pointer;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    #history-search-clear:hover { background: #3a3a3a; color: #fff; }
+    #history-search-clear[hidden] { display: none; }
+
     /* =========================================================
        HISTORY
        ========================================================= */
@@ -297,6 +354,14 @@
     .history-item.active {
       background: #2a2a2a;
       color: white;
+    }
+
+    .history-item.pinned {
+      background: rgba(255,255,255,.025);
+    }
+
+    .history-item.pinned .history-item-icon {
+      color: #d6b85a;
     }
 
     .history-item-content {
@@ -1657,6 +1722,12 @@
           <span>Chat baru</span>
         </button>
 
+        <div class="history-search">
+          <span class="history-search-icon" aria-hidden="true">🔎</span>
+          <input id="history-search" type="search" placeholder="Search chat history" autocomplete="off" aria-label="Search chat history" />
+          <button id="history-search-clear" type="button" aria-label="Hapus pencarian" hidden>×</button>
+        </div>
+
       </div>
 
       <div
@@ -1882,6 +1953,14 @@
     class="chat-menu"
     hidden
   >
+
+    <button
+      id="menu-pin"
+      type="button"
+    >
+      📌
+      <span>Pin chat</span>
+    </button>
 
     <button
       id="menu-rename"
