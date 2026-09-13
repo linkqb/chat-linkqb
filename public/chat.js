@@ -28,6 +28,8 @@
   const historyEl = document.getElementById("history");
 
   const newChatBtn = document.getElementById("new-chat-btn");
+  const historySearch = document.getElementById("history-search");
+  const historySearchClear = document.getElementById("history-search-clear");
 
   const topbarTitle = document.getElementById("topbar-title");
 
@@ -46,6 +48,7 @@
 
   const chatMenu = document.getElementById("chat-menu");
   const menuRename = document.getElementById("menu-rename");
+  const menuPin = document.getElementById("menu-pin");
   const menuDelete = document.getElementById("menu-delete");
 
   const renameModal = document.getElementById("rename-modal");
@@ -69,6 +72,7 @@
   );
 
   let activeMenuChatId = null;
+  let historySearchQuery = "";
 
   let renameChatId = null;
   let deleteChatId = null;
@@ -88,6 +92,11 @@
     }
 
     chats = chats.slice(0, MAX_HISTORY);
+
+    chats.forEach(chat => {
+      if (typeof chat.pinned !== "boolean") chat.pinned = false;
+      if (!Array.isArray(chat.messages)) chat.messages = [];
+    });
 
     if (
       currentChatId &&
@@ -154,6 +163,27 @@
     );
 
 
+    historySearch?.addEventListener(
+      "input",
+      () => {
+        historySearchQuery = historySearch.value.trim().toLowerCase();
+        updateHistorySearchUI();
+        renderHistory();
+      }
+    );
+
+    historySearchClear?.addEventListener(
+      "click",
+      () => {
+        if (!historySearch) return;
+        historySearch.value = "";
+        historySearchQuery = "";
+        updateHistorySearchUI();
+        renderHistory();
+        historySearch.focus();
+      }
+    );
+
     newChatBtn?.addEventListener(
       "click",
       () => {
@@ -189,6 +219,16 @@
       }
     );
 
+
+    menuPin?.addEventListener(
+      "click",
+      () => {
+        if (!activeMenuChatId) return;
+        const id = activeMenuChatId;
+        closeChatMenu();
+        togglePinChat(id);
+      }
+    );
 
     menuRename?.addEventListener(
       "click",
@@ -472,6 +512,11 @@
 
     chats = chats.slice(0, MAX_HISTORY);
 
+    chats.forEach(chat => {
+      if (typeof chat.pinned !== "boolean") chat.pinned = false;
+      if (!Array.isArray(chat.messages)) chat.messages = [];
+    });
+
     currentChatId = chat.id;
 
     saveChats();
@@ -572,84 +617,62 @@
      ========================================================== */
 
   function renderHistory() {
-
-    if (!historyEl) {
-      return;
-    }
-
+    if (!historyEl) return;
     historyEl.innerHTML = "";
-
-    if (!chats.length) {
-
-      const empty =
-        document.createElement("div");
-
-      empty.className =
-        "history-empty";
-
-      empty.textContent =
-        "Belum ada percakapan.";
-
+    const query = historySearchQuery;
+    const filtered = query ? chats.filter(chat => chatMatchesSearch(chat, query)) : chats;
+    if (!filtered.length) {
+      const empty = document.createElement("div");
+      empty.className = "history-empty";
+      empty.textContent = query ? "Tidak ada chat yang cocok." : "Belum ada percakapan.";
       historyEl.appendChild(empty);
-
       return;
-
     }
-
-
-    const groups = groupChatsByDate(chats);
-
-
-    const order = [
-      "Today",
-      "Yesterday",
-      "Previous 7 Days",
-      "Older"
-    ];
-
-
-    for (const groupName of order) {
-
+    const pinned = filtered.filter(chat => chat.pinned);
+    if (pinned.length) {
+      appendHistoryGroup("Pinned", pinned);
+    }
+    const unpinned = filtered.filter(chat => !chat.pinned);
+    if (query) {
+      if (unpinned.length) appendHistoryGroup("Search results", unpinned);
+      return;
+    }
+    const groups = groupChatsByDate(unpinned);
+    ["Today", "Yesterday", "Previous 7 Days", "Older"].forEach(groupName => {
       const items = groups[groupName];
+      if (items?.length) appendHistoryGroup(groupName, items);
+    });
+  }
 
-      if (!items || !items.length) {
-        continue;
-      }
+  function appendHistoryGroup(groupName, items) {
+    const group = document.createElement("section");
+    group.className = "history-group";
+    const title = document.createElement("div");
+    title.className = "history-title";
+    title.textContent = groupName;
+    group.appendChild(title);
+    items.forEach(chat => group.appendChild(createHistoryItem(chat)));
+    historyEl.appendChild(group);
+  }
 
+  function chatMatchesSearch(chat, query) {
+    const title = chat.title || "";
+    const content = (chat.messages || []).map(message => message?.content || "").join(" ");
+    return `${title} ${content}`.toLowerCase().includes(query);
+  }
 
-      const group =
-        document.createElement("section");
+  function updateHistorySearchUI() {
+    if (!historySearchClear || !historySearch) return;
+    historySearchClear.hidden = !historySearch.value;
+  }
 
-      group.className =
-        "history-group";
-
-
-      const title =
-        document.createElement("div");
-
-      title.className =
-        "history-title";
-
-      title.textContent =
-        groupName;
-
-      group.appendChild(title);
-
-
-      for (const chat of items) {
-
-        const item =
-          createHistoryItem(chat);
-
-        group.appendChild(item);
-
-      }
-
-
-      historyEl.appendChild(group);
-
-    }
-
+  function togglePinChat(id) {
+    const chat = chats.find(item => item.id === id);
+    if (!chat) return;
+    chat.pinned = !chat.pinned;
+    chat.updatedAt = Date.now();
+    saveChats();
+    renderHistory();
   }
 
 
@@ -663,6 +686,9 @@
 
     if (chat.id === currentChatId) {
       row.classList.add("active");
+    }
+    if (chat.pinned) {
+      row.classList.add("pinned");
     }
 
 
@@ -680,7 +706,7 @@
       "history-item-icon";
 
     icon.textContent =
-      "◌";
+      chat.pinned ? "📌" : "◌";
 
 
     const title =
@@ -1022,6 +1048,11 @@
   function openChatMenu(id, button) {
 
     activeMenuChatId = id;
+
+    const menuChat = chats.find(item => item.id === id);
+    if (menuPin) {
+      menuPin.querySelector("span")?.replaceChildren(document.createTextNode(menuChat?.pinned ? "Unpin" : "Pin chat"));
+    }
 
     chatMenu.hidden = false;
 
@@ -2258,34 +2289,18 @@
      AUTO TITLE
      ========================================================== */
 
-  function createTitleFromMessage(
-    text
-  ) {
-
-    const clean =
-      text
-        .replace(/\s+/g, " ")
-        .trim();
-
-
-    if (!clean) {
-      return "Chat baru";
-    }
-
-
-    if (
-      clean.length <= 42
-    ) {
-      return clean;
-    }
-
-
-    return (
-      clean.slice(0, 42)
-        .trim() +
-      "..."
-    );
-
+  function createTitleFromMessage(text) {
+    let clean = String(text || "")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/https?:\/\/\S+/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    clean = clean.replace(/^(tolong|mohon|bantu|bisa|bisakah|coba|buatkan|buat|jelaskan|terangkan|kasih|berikan)\b[,:\s-]*/i, "").trim();
+    if (!clean) clean = String(text || "").replace(/\s+/g, " ").trim();
+    if (!clean) return "Chat baru";
+    const words = clean.split(" ");
+    if (words.length > 8) clean = words.slice(0, 8).join(" ");
+    return clean.length <= 55 ? clean : clean.slice(0, 55).trim().replace(/[.,;:!?-]+$/, "") + "…";
   }
 
 
