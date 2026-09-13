@@ -1900,6 +1900,62 @@
       );
 
 
+      const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            const parent = node.parentElement;
+            if (
+              !parent ||
+              parent.closest("a,code,pre") ||
+              !/(?:https?:\/\/|www\.)?aimrferdy\.net/i.test(node.nodeValue || "")
+            ) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        }
+      );
+
+      const textNodes = [];
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+
+      const urlPattern =
+        /(^|[\s(>])((?:https?:\/\/|www\.)?aimrferdy\.net(?:\/[^\s<)]*)?)/gi;
+
+      textNodes.forEach(node => {
+        const text = node.nodeValue || "";
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+
+        text.replace(urlPattern, (match, prefix, url, offset) => {
+          fragment.appendChild(
+            document.createTextNode(text.slice(lastIndex, offset) + prefix)
+          );
+
+          const link = document.createElement("a");
+          const href = /^https?:\/\//i.test(url)
+            ? url
+            : `https://${url}`;
+
+          link.href = href;
+          link.textContent = url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          fragment.appendChild(link);
+
+          lastIndex = offset + match.length;
+          return match;
+        });
+
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        node.parentNode.replaceChild(fragment, node);
+      });
+
+
       element
         .querySelectorAll(
           "a"
