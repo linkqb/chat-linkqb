@@ -600,6 +600,30 @@
       text-transform: uppercase;
     }
 
+    .topbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .topbar-action {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: transparent;
+      color: #999;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .topbar-action:hover {
+      background: #303030;
+      color: #eee;
+    }
+
     /* =========================================================
        CHAT AREA
        ========================================================= */
@@ -844,6 +868,18 @@
 
     .message-content {
       min-width: 0;
+    }
+
+    .message-time {
+      display: block;
+      margin-top: 5px;
+      color: #666;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .message.user .message-time {
+      text-align: right;
     }
 
     /* =========================================================
@@ -1160,6 +1196,33 @@
         opacity: 1;
         transform: translateY(-3px);
       }
+    }
+
+    .scroll-bottom-btn {
+      position: absolute;
+      right: 22px;
+      bottom: 112px;
+      z-index: 16;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid #4a4a4a;
+      border-radius: 50%;
+      background: #2b2b2b;
+      color: #ddd;
+      box-shadow: 0 8px 25px rgba(0,0,0,.3);
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    .scroll-bottom-btn:hover {
+      background: #3a3a3a;
+      color: #fff;
+    }
+
+    .scroll-bottom-btn[hidden] {
+      display: none;
     }
 
     /* =========================================================
@@ -1545,6 +1608,16 @@
         padding: 0 12px;
       }
 
+      .topbar-action {
+        width: 32px;
+        height: 32px;
+      }
+
+      .scroll-bottom-btn {
+        right: 12px;
+        bottom: 105px;
+      }
+
       .chat-container {
         width: min(
           100% - 28px,
@@ -1791,6 +1864,11 @@
           </span>
         </div>
 
+        <div class="topbar-tools">
+          <button id="copy-chat-btn" class="topbar-action" type="button" aria-label="Copy percakapan">⧉</button>
+          <button id="export-chat-btn" class="topbar-action" type="button" aria-label="Export percakapan">⇩</button>
+        </div>
+
       </header>
 
 
@@ -1888,6 +1966,16 @@
 
       </div>
 
+
+      <button
+        id="scroll-bottom-btn"
+        class="scroll-bottom-btn"
+        type="button"
+        aria-label="Kembali ke pesan terbaru"
+        hidden
+      >
+        ↓
+      </button>
 
       <!-- COMPOSER -->
 
