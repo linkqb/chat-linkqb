@@ -28,7 +28,28 @@
     href="https://chat.aimrferdy.net/"
   />
 
-  <title>AI Mr Ferdy - AI Chat Bahasa Indonesia</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AI Mr Ferdy - Asisten AI Online untuk Coding, SEO & Konten" />
+  <meta property="og:description" content="Asisten AI online untuk coding, SEO, menulis, ide konten, belajar, dan kebutuhan digital." />
+  <meta property="og:url" content="https://chat.aimrferdy.net/" />
+  <meta name="twitter:card" content="summary" />
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+    "name":"AI Mr Ferdy",
+    "url":"https://chat.aimrferdy.net/",
+    "description":"Asisten AI online untuk coding, SEO, menulis, ide konten, belajar, dan kebutuhan digital.",
+    "publisher":{
+      "@type":"Organization",
+      "name":"AI Mr Ferdy",
+      "url":"https://aimrferdy.net"
+    }
+  }
+  </script>
+
+  <title>AI Mr Ferdy - Asisten AI Online untuk Coding, SEO & Konten</title>
 
   <!-- Highlight.js -->
   <link
@@ -780,6 +801,63 @@
       color: #888;
 
       font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .seo-intro {
+      width: min(700px, 100%);
+      margin-top: 34px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+      background: rgba(255,255,255,.025);
+      text-align: left;
+    }
+    .seo-intro h2 {
+      margin: 0 0 8px;
+      color: #eee;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .seo-intro h2:not(:first-child) {
+      margin-top: 20px;
+    }
+    .seo-intro p {
+      max-width: none;
+      margin: 0 0 14px;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .seo-intro a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+    .seo-intro a:hover {
+      text-decoration: underline;
+    }
+    .seo-features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .seo-features div {
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 10px;
+      background: rgba(255,255,255,.02);
+    }
+    .seo-features strong,
+    .seo-features span {
+      display: block;
+    }
+    .seo-features strong {
+      margin-bottom: 3px;
+      color: #ddd;
+      font-size: 12px;
+    }
+    .seo-features span {
+      color: #888;
+      font-size: 11px;
       line-height: 1.45;
     }
 
@@ -1710,6 +1788,15 @@
         min-height: 65px;
       }
 
+      .seo-intro {
+        margin-top: 24px;
+        padding: 16px;
+      }
+
+      .seo-features {
+        grid-template-columns: 1fr;
+      }
+
       .composer {
         border-radius: 15px;
       }
@@ -1905,52 +1992,52 @@
             </p>
 
             <div class="prompt-grid">
-
-              <button
-                class="prompt-btn"
-                type="button"
-                data-prompt="Bantu saya membuat website sederhana dengan HTML, CSS, dan JavaScript."
-              >
+              <button class="prompt-btn" type="button" data-prompt="Bantu saya membuat atau memperbaiki kode website dengan HTML, CSS, dan JavaScript.">
                 <strong>💻 Bantu coding</strong>
-                <span>
-                  Buat atau perbaiki kode website
-                </span>
+                <span>Buat atau perbaiki kode website</span>
               </button>
-
-              <button
-                class="prompt-btn"
-                type="button"
-                data-prompt="Buatkan ide artikel SEO yang menarik dan berpotensi mendapatkan traffic dari Google."
-              >
+              <button class="prompt-btn" type="button" data-prompt="Buatkan strategi SEO untuk website saya, termasuk keyword, struktur konten, dan optimasi on-page.">
                 <strong>🔎 Ide SEO</strong>
-                <span>
-                  Cari ide konten yang SEO-friendly
-                </span>
+                <span>Buat strategi SEO yang relevan</span>
               </button>
-
-              <button
-                class="prompt-btn"
-                type="button"
-                data-prompt="Buatkan 10 ide konten TikTok yang menarik untuk niche teknologi."
-              >
+              <button class="prompt-btn" type="button" data-prompt="Berikan 10 ide konten yang menarik dan relevan untuk dikembangkan menjadi artikel atau konten digital.">
                 <strong>💡 Ide konten</strong>
-                <span>
-                  Cari ide konten yang bisa dikembangkan
-                </span>
+                <span>Cari ide konten yang bisa dikembangkan</span>
               </button>
-
-              <button
-                class="prompt-btn"
-                type="button"
-                data-prompt="Jelaskan konsep JavaScript async dan await dengan contoh sederhana dalam Bahasa Indonesia."
-              >
+              <button class="prompt-btn" type="button" data-prompt="Bantu saya menulis atau memperbaiki artikel, caption, deskripsi, atau teks agar lebih jelas dan menarik.">
+                <strong>✍️ Bantu menulis</strong>
+                <span>Buat atau perbaiki tulisan</span>
+              </button>
+              <button class="prompt-btn" type="button" data-prompt="Jelaskan topik yang saya tanyakan dengan bahasa Indonesia yang sederhana, jelas, dan mudah dipahami.">
                 <strong>📚 Belajar</strong>
-                <span>
-                  Jelaskan sesuatu dengan bahasa sederhana
-                </span>
+                <span>Jelaskan sesuatu dengan bahasa sederhana</span>
               </button>
-
+              <button class="prompt-btn" type="button" data-prompt="Bantu saya mencari penyebab masalah dan berikan langkah solusi yang praktis dan mudah diikuti.">
+                <strong>🛠️ Pecahkan masalah</strong>
+                <span>Cari penyebab dan solusi</span>
+              </button>
+              <button class="prompt-btn" type="button" data-prompt="Berikan beberapa ide proyek website atau aplikasi yang menarik untuk dibuat, beserta fitur utamanya.">
+                <strong>🚀 Ide proyek</strong>
+                <span>Temukan ide website atau aplikasi</span>
+              </button>
+              <button class="prompt-btn" type="button" data-prompt="Apa situs resmi AI Mr Ferdy?">
+                <strong>🌐 Tentang AI Mr Ferdy</strong>
+                <span>Kenali AI Mr Ferdy dan situs resminya</span>
+              </button>
             </div>
+
+            <section class="seo-intro" aria-labelledby="seo-intro-title">
+              <h2 id="seo-intro-title">AI Mr Ferdy - Asisten AI Online</h2>
+              <p>AI Mr Ferdy adalah asisten AI online yang membantu pengguna dalam coding, SEO, penulisan, ide konten, belajar, dan berbagai kebutuhan digital.</p>
+              <div class="seo-features">
+                <div><strong>Bantu Coding</strong><span>Buat, perbaiki, dan jelaskan kode website.</span></div>
+                <div><strong>Bantu SEO</strong><span>Cari keyword, ide konten, dan strategi optimasi.</span></div>
+                <div><strong>Bantu Menulis</strong><span>Kembangkan artikel, caption, dan berbagai teks.</span></div>
+                <div><strong>Bantu Belajar</strong><span>Jelaskan topik dengan bahasa yang sederhana.</span></div>
+              </div>
+              <h2>Apa situs resmi AI Mr Ferdy?</h2>
+              <p>Situs resmi AI Mr Ferdy adalah <a href="https://aimrferdy.net">aimrferdy.net</a>. Halaman ini menyediakan akses chat AI untuk membantu berbagai kebutuhan digital.</p>
+            </section>
 
           </section>
 
