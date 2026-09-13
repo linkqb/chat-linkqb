@@ -15,6 +15,7 @@
   const CURRENT_CHAT_KEY = "aimrferdy_current_chat_v2";
 
   const MAX_HISTORY = 100;
+  const MAX_CONTEXT_CHARS = 24000;
 
 
   /* ==========================================================
@@ -32,6 +33,9 @@
   const historySearchClear = document.getElementById("history-search-clear");
 
   const topbarTitle = document.getElementById("topbar-title");
+  const copyChatBtn = document.getElementById("copy-chat-btn");
+  const exportChatBtn = document.getElementById("export-chat-btn");
+  const scrollBottomBtn = document.getElementById("scroll-bottom-btn");
 
   const chatScroll = document.getElementById("chat-scroll");
   const chatContainer = document.getElementById("chat-container");
@@ -73,6 +77,7 @@
 
   let activeMenuChatId = null;
   let historySearchQuery = "";
+  let userScrolledUp = false;
 
   let renameChatId = null;
   let deleteChatId = null;
@@ -183,6 +188,11 @@
         historySearch.focus();
       }
     );
+
+    copyChatBtn?.addEventListener("click", copyCurrentChat);
+    exportChatBtn?.addEventListener("click", exportCurrentChat);
+    scrollBottomBtn?.addEventListener("click", () => scrollToBottom(true, true));
+    chatScroll?.addEventListener("scroll", updateScrollButton, { passive: true });
 
     newChatBtn?.addEventListener(
       "click",
@@ -590,22 +600,21 @@
 
     welcome.style.display = "none";
 
-    for (const message of chat.messages) {
-
+    chat.messages.forEach((message, index) => {
       if (
         message.role !== "user" &&
         message.role !== "assistant"
       ) {
-        continue;
+        return;
       }
-
       appendMessage(
         message.role,
         message.content,
-        false
+        false,
+        message,
+        index
       );
-
-    }
+    });
 
     scrollToBottom(false);
 
@@ -1152,11 +1161,9 @@
 
 
     const userMessage = {
-
       role: "user",
-
-      content: text
-
+      content: text,
+      timestamp: Date.now()
     };
 
 
@@ -1208,11 +1215,9 @@
 
 
     const assistantMessage = {
-
       role: "assistant",
-
-      content: ""
-
+      content: "",
+      timestamp: Date.now()
     };
 
 
@@ -1232,7 +1237,9 @@
       appendMessage(
         "assistant",
         "",
-        false
+        false,
+        assistantMessage,
+        chat.messages.length - 1
       );
 
 
@@ -1241,6 +1248,9 @@
         ".message-content"
       );
 
+    if (contentElement) {
+      contentElement.innerHTML = '<div class="typing" aria-label="AI sedang mengetik"><span></span><span></span><span></span></div>';
+    }
 
     abortController =
       new AbortController();
@@ -1263,8 +1273,7 @@
             },
 
             body: JSON.stringify({
-              messages:
-                chat.messages
+              messages: buildContextMessages(chat.messages)
             }),
 
             signal:
@@ -1431,7 +1440,9 @@
 
       addMessageActions(
         assistantElement,
-        assistantMessage.content
+        assistantMessage.content,
+        "assistant",
+        chat.messages.length - 1
       );
 
 
@@ -1695,7 +1706,9 @@
   function appendMessage(
     role,
     content,
-    shouldScroll = true
+    shouldScroll = true,
+    messageData = null,
+    messageIndex = -1
   ) {
 
     const message =
@@ -1703,6 +1716,9 @@
 
     message.className =
       `message ${role}`;
+    if (messageIndex >= 0) {
+      message.dataset.messageIndex = String(messageIndex);
+    }
 
 
     const inner =
@@ -1765,14 +1781,20 @@
       contentEl
     );
 
+    const timestamp = document.createElement("time");
+    timestamp.className = "message-time";
+    timestamp.dateTime = messageData?.timestamp
+      ? new Date(messageData.timestamp).toISOString()
+      : "";
+    timestamp.textContent = formatMessageTime(messageData?.timestamp);
+    if (timestamp.textContent) {
+      body.appendChild(timestamp);
+    }
 
     if (role === "assistant" && content) {
-
-      addMessageActions(
-        message,
-        content
-      );
-
+      addMessageActions(message, content, role, messageIndex);
+    } else if (role === "user" && content) {
+      addMessageActions(message, content, role, messageIndex);
     }
 
 
@@ -2141,93 +2163,156 @@
 
   function addMessageActions(
     messageElement,
-    content
+    content,
+    role = "assistant",
+    messageIndex = -1
   ) {
+    const body = messageElement.querySelector(".message-body");
+    if (!body) return;
 
-    const body =
-      messageElement.querySelector(
-        ".message-body"
-      );
+    const oldActions = body.querySelector(".message-actions");
+    if (oldActions) oldActions.remove();
 
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
 
-    if (!body) {
-      return;
+    if (role === "assistant") {
+      const regenerateButton = document.createElement("button");
+      regenerateButton.type = "button";
+      regenerateButton.textContent = "↻ Regenerate";
+      regenerateButton.addEventListener("click", () => regenerateResponse(messageIndex));
+      actions.appendChild(regenerateButton);
     }
 
-
-    const oldActions =
-      body.querySelector(
-        ".message-actions"
-      );
-
-
-    if (oldActions) {
-      oldActions.remove();
+    if (role === "user") {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.textContent = "✎ Edit";
+      editButton.addEventListener("click", () => editMessage(messageIndex));
+      actions.appendChild(editButton);
     }
 
-
-    const actions =
-      document.createElement(
-        "div"
-      );
-
-    actions.className =
-      "message-actions";
-
-
-    const copyButton =
-      document.createElement(
-        "button"
-      );
-
-    copyButton.type =
-      "button";
-
-    copyButton.innerHTML =
-      "⧉ Copy";
-
-
-    copyButton.addEventListener(
-      "click",
-      async () => {
-
-        const success =
-          await copyToClipboard(
-            content
-          );
-
-
-        copyButton.textContent =
-          success
-            ? "✓ Copied"
-            : "Gagal";
-
-
-        setTimeout(
-          () => {
-
-            copyButton.innerHTML =
-              "⧉ Copy";
-
-          },
-          1400
-        );
-
-      }
-    );
-
-
-    actions.appendChild(
-      copyButton
-    );
-
-
-    body.appendChild(
-      actions
-    );
-
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.innerHTML = "⧉ Copy";
+    copyButton.addEventListener("click", async () => {
+      const success = await copyToClipboard(content);
+      copyButton.textContent = success ? "✓ Copied" : "Gagal";
+      setTimeout(() => {
+        copyButton.innerHTML = "⧉ Copy";
+      }, 1400);
+    });
+    actions.appendChild(copyButton);
+    body.appendChild(actions);
   }
 
+  async function regenerateResponse(messageIndex) {
+    if (isGenerating) return;
+    const chat = getCurrentChat();
+    const message = chat?.messages?.[messageIndex];
+    if (!chat || !message || message.role !== "assistant") return;
+    chat.messages = chat.messages.slice(0, messageIndex);
+    chat.updatedAt = Date.now();
+    saveChats();
+    renderHistory();
+    renderCurrentChat();
+    await requestAI(chat);
+  }
+
+  function editMessage(messageIndex) {
+    if (isGenerating) return;
+    const chat = getCurrentChat();
+    const message = chat?.messages?.[messageIndex];
+    if (!chat || !message || message.role !== "user") return;
+    input.value = message.content || "";
+    chat.messages = chat.messages.slice(0, messageIndex);
+    chat.updatedAt = Date.now();
+    saveChats();
+    renderHistory();
+    renderCurrentChat();
+    resizeTextarea();
+    updateSendButton();
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+
+  function formatMessageTime(timestamp) {
+    if (!timestamp) return "";
+    try {
+      return new Intl.DateTimeFormat("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(timestamp));
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function buildContextMessages(messages) {
+    if (!Array.isArray(messages) || !messages.length) return [];
+    const total = messages.reduce(
+      (sum, message) => sum + String(message?.content || "").length,
+      0
+    );
+    if (total <= MAX_CONTEXT_CHARS) return messages;
+
+    const selected = [];
+    let used = 0;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      const size = String(message?.content || "").length;
+      if (selected.length && used + size > MAX_CONTEXT_CHARS) break;
+      selected.push(message);
+      used += size;
+    }
+
+    const first = messages[0];
+    if (first && !selected.includes(first)) {
+      while (selected.length && used + String(first.content || "").length > MAX_CONTEXT_CHARS) {
+        const removed = selected.shift();
+        used -= String(removed?.content || "").length;
+      }
+      if (used + String(first.content || "").length <= MAX_CONTEXT_CHARS) {
+        selected.unshift(first);
+      }
+    }
+
+    return selected.reverse();
+  }
+
+  function getChatText(chat) {
+    return (chat?.messages || [])
+      .filter(message => message?.role === "user" || message?.role === "assistant")
+      .map(message => `${message.role === "user" ? "You" : "AI Mr Ferdy"}: ${message.content || ""}`)
+      .join("\n\n");
+  }
+
+  async function copyCurrentChat() {
+    const chat = getCurrentChat();
+    if (!chat?.messages?.length) return;
+    const success = await copyToClipboard(getChatText(chat));
+    if (!copyChatBtn) return;
+    const old = copyChatBtn.textContent;
+    copyChatBtn.textContent = success ? "✓ Copied" : "Gagal";
+    setTimeout(() => {
+      copyChatBtn.textContent = old || "Copy";
+    }, 1400);
+  }
+
+  function exportCurrentChat() {
+    const chat = getCurrentChat();
+    if (!chat?.messages?.length) return;
+    const text = `${chat.title || "Chat baru"}\n${"=".repeat(40)}\n\n${getChatText(chat)}`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${(chat.title || "chat-baru").replace(/[^a-z0-9-_]+/gi, "-").slice(0, 60) || "chat-baru"}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
 
   async function copyToClipboard(
     text
@@ -2444,32 +2529,27 @@
      ========================================================== */
 
   function scrollToBottom(
-    smooth = true
+    smooth = true,
+    force = true
   ) {
+    if (!chatScroll) return;
+    if (!force && userScrolledUp) return;
+    requestAnimationFrame(() => {
+      chatScroll.scrollTo({
+        top: chatScroll.scrollHeight,
+        behavior: smooth ? "smooth" : "auto"
+      });
+      userScrolledUp = false;
+      updateScrollButton();
+    });
+  }
 
-    if (!chatScroll) {
-      return;
-    }
-
-
-    requestAnimationFrame(
-      () => {
-
-        chatScroll.scrollTo({
-
-          top:
-            chatScroll.scrollHeight,
-
-          behavior:
-            smooth
-              ? "smooth"
-              : "auto"
-
-        });
-
-      }
-    );
-
+  function updateScrollButton() {
+    if (!chatScroll || !scrollBottomBtn) return;
+    const distance = chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight;
+    const show = distance > 260;
+    scrollBottomBtn.hidden = !show;
+    userScrolledUp = show;
   }
 
 
